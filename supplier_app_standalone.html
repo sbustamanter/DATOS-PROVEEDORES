@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Data Entry</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        form {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .error {
+            color: red;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        .success {
+            color: green;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            form {
+                padding: 15px;
+            }
+            input, select, button {
+                font-size: 18px;
+                padding: 14px;
+            }
+            table, thead, tbody, th, td, tr {
+                display: block;
+                width: 100%;
+            }
+            thead tr {
+                display: none;
+            }
+            tbody tr {
+                margin-bottom: 15px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 10px;
+                background-color: #fafafa;
+            }
+            tbody td {
+                padding: 10px 5px;
+                text-align: right;
+                position: relative;
+                padding-left: 50%;
+                border: none;
+                border-bottom: 1px solid #eee;
+            }
+            tbody td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                top: 10px;
+                font-weight: bold;
+                text-transform: uppercase;
+                font-size: 14px;
+                color: #555;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Supplier Data Entry</h1>
+        
+        <form id="supplierForm">
+            <div class="form-group">
+                <label for="name">Supplier Name:</label>
+                <input type="text" id="name" name="name" required>
+                <div class="error" id="nameError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="payment_method">Payment Method:</label>
+                <select id="payment_method" name="payment_method" required>
+                    <option value="">Select a payment method</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Check">Check</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Credit Card">Credit Card</option>
+                </select>
+                <div class="error" id="paymentMethodError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="days_to_issue_check">Days to Issue Check:</label>
+                <input type="number" id="days_to_issue_check" name="days_to_issue_check" min="0" required>
+                <div class="error" id="daysError"></div>
+            </div>
+            
+            <button type="submit">Add Supplier</button>
+            <div class="success" id="successMessage"></div>
+        </form>
+        
+        <h2>Suppliers List</h2>
+        <table id="suppliersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Payment Method</th>
+                    <th>Days to Issue Check</th>
+                </tr>
+            </thead>
+            <tbody id="suppliersBody">
+                <!-- Suppliers will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Load suppliers from localStorage on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSuppliers();
+            document.getElementById('supplierForm').addEventListener('submit', handleFormSubmit);
+        });
+
+        // Handle form submission
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            // Clear previous error messages
+            clearErrors();
+            
+            // Get form values
+            const name = document.getElementById('name').value.trim();
+            const paymentMethod = document.getElementById('payment_method').value;
+            const daysToIssueCheck = document.getElementById('days_to_issue_check').value;
+            
+            // Validate form
+            let isValid = true;
+            
+            if (!name) {
+                document.getElementById('nameError').textContent = 'Supplier name is required.';
+                isValid = false;
+            }
+            
+            if (!paymentMethod) {
+                document.getElementById('paymentMethodError').textContent = 'Payment method is required.';
+                isValid = false;
+            }
+            
+            if (!daysToIssueCheck || daysToIssueCheck < 0) {
+                document.getElementById('daysError').textContent = 'Days to issue check must be a non-negative number.';
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                return;
+            }
+            
+            // Create supplier object
+            const supplier = {
+                id: Date.now(), // Simple ID generation
+                name: name,
+                paymentMethod: paymentMethod,
+                daysToIssueCheck: parseInt(daysToIssueCheck)
+            };
+            
+            // Save supplier
+            saveSupplier(supplier);
+            
+            // Reset form
+            document.getElementById('supplierForm').reset();
+            
+            // Show success message
+            document.getElementById('successMessage').textContent = 'Supplier added successfully!';
+            setTimeout(() => {
+                document.getElementById('successMessage').textContent = '';
+            }, 3000);
+            
+            // Reload suppliers display
+            loadSuppliers();
+        }
+
+        // Save supplier to localStorage
+        function saveSupplier(supplier) {
+            let suppliers = JSON.parse(localStorage.getItem('suppliers')) || [];
+            suppliers.push(supplier);
+            localStorage.setItem('suppliers', JSON.stringify(suppliers));
+        }
+
+        // Load suppliers from localStorage and display them
+        function loadSuppliers() {
+            const suppliers = JSON.parse(localStorage.getItem('suppliers')) || [];
+            const tbody = document.getElementById('suppliersBody');
+            
+            // Clear existing rows
+            tbody.innerHTML = '';
+            
+            // Add suppliers to table
+            suppliers.forEach(supplier => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${supplier.id}</td>
+                    <td>${supplier.name}</td>
+                    <td>${supplier.paymentMethod}</td>
+                    <td>${supplier.daysToIssueCheck}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Show message if no suppliers
+            if (suppliers.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="4" style="text-align: center;">No suppliers added yet.</td>';
+                tbody.appendChild(row);
+            }
+        }
+
+        // Clear error messages
+        function clearErrors() {
+            document.getElementById('nameError').textContent = '';
+            document.getElementById('paymentMethodError').textContent = '';
+            document.getElementById('daysError').textContent = '';
+        }
+    </script>
+</body>
+</html>
